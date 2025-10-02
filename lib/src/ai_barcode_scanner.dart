@@ -204,9 +204,7 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
   @override
   Widget build(BuildContext context) {
     /// keeps the app in portrait mode
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
+
     return Scaffold(
       body: Stack(
         children: [
