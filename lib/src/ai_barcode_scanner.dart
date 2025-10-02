@@ -186,7 +186,13 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
 
   @override
   void initState() {
-    controller = widget.controller ?? MobileScannerController();
+    // Set landscape orientation
+
+    controller = widget.controller ??
+        MobileScannerController(
+          facing: CameraFacing.back,
+          detectionSpeed: DetectionSpeed.normal,
+        );
     super.initState();
   }
 
@@ -208,68 +214,72 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
     return Scaffold(
       body: Stack(
         children: [
-          MobileScanner(
-            controller: controller,
-            fit: widget.fit,
-            errorBuilder: widget.errorBuilder ??
-                (context, error, child) {
-                  return ColoredBox(
-                    color: Colors.black,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(
-                            Icons.no_photography,
-                            color: Colors.white,
-                            size: 100,
-                          ),
-                          SizedBox(height: 20),
-                          Text(
-                            "Failed to load camera.",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
+          Transform.rotate(
+            angle:
+                0, // Mude para 3.14159 (180 graus) se estiver de cabeça para baixo
+            child: MobileScanner(
+              controller: controller,
+              fit: widget.fit,
+              errorBuilder: widget.errorBuilder ??
+                  (context, error, child) {
+                    return ColoredBox(
+                      color: Colors.black,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(
+                              Icons.no_photography,
+                              color: Colors.white,
+                              size: 100,
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              "Failed to load camera.",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-            onScannerStarted: widget.onScannerStarted,
-            placeholderBuilder: widget.placeholderBuilder,
-            scanWindow: widget.scanWindow,
-            startDelay: widget.startDelay ?? false,
-            key: widget.key,
-            onDetect: (BarcodeCapture barcode) async {
-              widget.onDetect?.call(barcode);
+                    );
+                  },
+              onScannerStarted: widget.onScannerStarted,
+              placeholderBuilder: widget.placeholderBuilder,
+              scanWindow: widget.scanWindow,
+              startDelay: widget.startDelay ?? false,
+              key: widget.key,
+              onDetect: (BarcodeCapture barcode) async {
+                widget.onDetect?.call(barcode);
 
-              if (barcode.barcodes.isEmpty) {
-                log('Scanned Code is Empty');
-                return;
-              }
+                if (barcode.barcodes.isEmpty) {
+                  log('Scanned Code is Empty');
+                  return;
+                }
 
-              final String code = barcode.barcodes.first.rawValue ?? "";
+                final String code = barcode.barcodes.first.rawValue ?? "";
 
-              if ((widget.validator != null && !widget.validator!(code))) {
+                if ((widget.validator != null && !widget.validator!(code))) {
+                  setState(() {
+                    HapticFeedback.heavyImpact();
+                    log('Invalid Barcode => $code');
+                    _isSuccess = false;
+                  });
+                  return;
+                }
                 setState(() {
-                  HapticFeedback.heavyImpact();
-                  log('Invalid Barcode => $code');
-                  _isSuccess = false;
+                  _isSuccess = true;
+                  HapticFeedback.lightImpact();
+                  log('Barcode rawValue => $code');
+                  widget.onScan(code);
                 });
-                return;
-              }
-              setState(() {
-                _isSuccess = true;
-                HapticFeedback.lightImpact();
-                log('Barcode rawValue => $code');
-                widget.onScan(code);
-              });
-              if (widget.canPop && mounted && Navigator.canPop(context)) {
-                Navigator.pop(context);
-                return;
-              }
-            },
+                if (widget.canPop && mounted && Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                  return;
+                }
+              },
+            ),
           ),
           if (widget.showOverlay)
             Container(
