@@ -215,14 +215,14 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
             fit: widget.fit,
             errorBuilder: widget.errorBuilder ??
                 (context, error, child) {
-                  return const ColoredBox(
+                  return ColoredBox(
                     color: Colors.black,
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
-                        children: [
+                        children: const [
                           Icon(
                             Icons.no_photography,
                             color: Colors.white,
